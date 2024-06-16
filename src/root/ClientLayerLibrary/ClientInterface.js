@@ -1992,7 +1992,7 @@ async function download_instruments(){
   {"symbol": "XTZETH", "status": "TRADING", "baseAsset": "XTZ", "baseAssetPrecision": 8, "quoteAsset": "ETH", "quotePrecision": 8, "quoteAssetPrecision": 8, "baseCommissionPrecision": 8, "quoteCommissionPrecision": 8, "orderTypes": ["LIMIT", "LIMIT_MAKER", "MARKET", "STOP_LOSS_LIMIT", "TAKE_PROFIT_LIMIT"], "icebergAllowed": "True", "ocoAllowed": "True", "quoteOrderQtyMarketAllowed": "True", "isSpotTradingAllowed": "True", "isMarginTradingAllowed": "False", "filters": [{"filterType": "PRICE_FILTER", "minPrice": "0.00000100", "maxPrice": "1000.00000000", "tickSize": "0.00000100"}, {"filterType": "PERCENT_PRICE", "multiplierUp": "5", "multiplierDown": "0.2", "avgPriceMins": 5}, {"filterType": "LOT_SIZE", "minQty": "0.01000000", "maxQty": "92141578.00000000", "stepSize": "0.01000000"}, {"filterType": "MIN_NOTIONAL", "minNotional": "0.00500000", "applyToMarket": "True", "avgPriceMins": 5}, {"filterType": "ICEBERG_PARTS", "limit": 10}, {"filterType": "MARKET_LOT_SIZE", "minQty": "0.00000000", "maxQty": "3426.20956250", "stepSize": "0.00000000"}, {"filterType": "MAX_NUM_ORDERS", "maxNumOrders": 200}, {"filterType": "MAX_NUM_ALGO_ORDERS", "maxNumAlgoOrders": 5}], "permissions": ["SPOT"]}`
     const instrumentList = data.split(/\r\n|\r|\n/)
     for(let instrument of instrumentList){
-        dict = JSON.parse(instrument)
+        const dict = JSON.parse(instrument)
         const desc = dict.baseAsset + " vs " + dict.quoteAsset
         dict.description = desc
         dict.exchange = "BINANCE"

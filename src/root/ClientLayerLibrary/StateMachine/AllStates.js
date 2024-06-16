@@ -1,4 +1,4 @@
-FSM = require('../../AsyncFSM')
+const FSM = require('../../AsyncFSM')
 const State = FSM.State
 const SpecialTransition = FSM.SpecialTransition
 
