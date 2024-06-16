@@ -1,0 +1,105 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 4%;
+  width: 4%;
+  text-align: center;
+  pointer-events: none;
+  align-items: center;
+}
+
+.All-generic_components {
+  display: inline-block;
+  text-align: left;
+}
+
+.container {
+  margin: 0 auto; /* center the container */
+  width: 75%;
+  height: 300px;
+  overflow-y: scroll;
+}
+
+.row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: center;
+  height: 20px;
+  margin-bottom: 5px;
+}
+
+.right_aligned_row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  align-items: end;
+  height: 20px;
+  margin-bottom: 5px;
+}
+
+.button {
+  flex: 0 0 auto;
+  width: auto;
+  margin-right: 0;
+  white-space: nowrap;
+}
+
+.tab {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: 5px;
+}
+
+
+.horizontal_tabs {
+  margin: 0 auto; /* center the container */
+  display: flex;
+  max-width: 75%;
+  align-items: center;
+  overflow-x: auto; /* allow horizontal scrolling */
+}
+
+.horizontal_tab {
+  flex: 1 0 auto; /* allow tabs to grow and shrink as needed */
+  white-space: nowrap; /* prevent text from wrapping */
+  text-align: center; /* center tab content */
+  padding: 10px; /* add padding to make the tabs more visible */
+}
+
+ .All-generic_components.Top-tabs {
+  display: flex;
+ }
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
