@@ -6,14 +6,29 @@ const { launch, raise_request, download_instruments} = require('./root/ClientLay
 let subscriptionHandler = null
 let virtualSubscriptionHandler = null
 let basketSubscriptionHandler = null
+let globalDict = null
 
 let libLogger = null
 function subscribe(symbol , exchange, callback){
+    const key = JSON.stringify([symbol, exchange])
+    const symbolRecord = globalDict.get(key)
+    if (undefined === symbolRecord) {
+        throw new Error("Invalid Symbol")
+    } else if( 0 !== exchange.localeCompare(symbolRecord.exchange)) {
+        throw new Error("Invalid Symbol, for this exchange")
+    }
     libLogger.debug(`subscribe, arguments: ${JSON.stringify(arguments)}`)
     subscriptionHandler.subscribe(symbol , exchange, callback)
 }
 
 function unsubscribe(symbol , exchange, callback){
+    const key = JSON.stringify([symbol, exchange])
+    const symbolRecord = globalDict.get(key)
+    if (undefined === symbolRecord) {
+        throw new Error("Invalid Symbol")
+    } else if( 0 !== exchange.localeCompare(symbolRecord.exchange)) {
+        throw new Error("Invalid Symbol, for this exchange")
+    }
     libLogger.debug(`unsubscribe, arguments: ${JSON.stringify(arguments)}`)
     subscriptionHandler.unsubscribe(symbol , exchange, callback)
 }
@@ -23,7 +38,24 @@ let exchangeSymbolNameGenerators = {BINANCE : (asset, currency, exchange)=> asse
 
 function subscribeVirtual(asset, currency, bridge, exchange, callback){
     libLogger.debug(`subscribeVirtual, arguments: ${JSON.stringify(arguments)}`)
+
     let exchangeSymbolNameGenerator = exchangeSymbolNameGenerators[exchange]
+
+    if(undefined === exchangeSymbolNameGenerator) {
+        throw new Error("Invalid exchange")
+    }
+
+    const assetSymbol = exchangeSymbolNameGenerator(asset, bridge, exchange)
+    const currencySymbol = exchangeSymbolNameGenerator(currency, bridge, exchange)
+    const assetSymbolRecord = globalDict.get(JSON.stringify([assetSymbol, exchange]))
+    const currencySymbolRecord = globalDict.get(JSON.stringify([currencySymbol, exchange]))
+
+    if (undefined === assetSymbolRecord) {
+        throw new Error("Invalid asset for this bridge")
+    } else if (undefined === currencySymbolRecord) {
+        throw new Error("Invalid currency side for this bridge")
+    }
+
     if(undefined !== exchangeSymbolNameGenerator){
         virtualSubscriptionHandler.subscribe(asset,
                                              currency,
@@ -38,6 +70,24 @@ function subscribeVirtual(asset, currency, bridge, exchange, callback){
 
 function unsubscribeVirtual(asset, currency, bridge, exchange, callback){
     libLogger.debug(`unsubscribeVirtual, arguments: ${JSON.stringify(arguments)}`)
+
+    let exchangeSymbolNameGenerator = exchangeSymbolNameGenerators[exchange]
+
+    if(undefined === exchangeSymbolNameGenerator) {
+        throw new Error("Invalid exchange")
+    }
+
+    const assetSymbol = exchangeSymbolNameGenerator(asset, bridge, exchange)
+    const currencySymbol = exchangeSymbolNameGenerator(currency, bridge, exchange)
+    const assetSymbolRecord = globalDict.get(JSON.stringify([assetSymbol, exchange]))
+    const currencySymbolRecord = globalDict.get(JSON.stringify([currencySymbol, exchange]))
+
+    if (undefined === assetSymbolRecord) {
+        throw new Error("Invalid asset for this bridge")
+    } else if (undefined === currencySymbolRecord) {
+        throw new Error("Invalid currency side for this bridge")
+    }
+
     virtualSubscriptionHandler.unsubscribe(asset,
                                          currency,
                                          bridge,
@@ -68,6 +118,7 @@ function onPriceUpdate(update){
 function init(auth_params, logger, staticDataCallback){
     download_instruments()
     .then((dict)=>{
+        globalDict = dict
         libLogger = logger
         libLogger.debug(JSON.stringify(dict))
         subscriptionHandler = new SubscriptionHandler( (symbol, exchange)=>{
