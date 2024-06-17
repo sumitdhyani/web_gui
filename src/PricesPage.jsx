@@ -191,7 +191,6 @@ function BasketPricesTab(props) {
     const symbol_dict = context.symbol_dict
     const native_assets = context.native_assets
     const native_currencies = context.native_currencies
-    const default_currency = context.default_currency
 
     const [updateCount, setUpdateCount] = useState(0)
     const cache = useRef( (undefined !== context.cache)? new Map(context.cache.map(key=>[key, null])) : new Map() )

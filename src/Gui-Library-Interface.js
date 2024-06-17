@@ -33,7 +33,9 @@ function unsubscribe(symbol , exchange, callback){
     subscriptionHandler.unsubscribe(symbol , exchange, callback)
 }
 
-let exchangeSymbolNameGenerators = {BINANCE : (asset, currency, exchange)=> asset.concat(currency)}
+let exchangeSymbolNameGenerators = {BINANCE : (asset, currency, exchange)=> asset.concat(currency),
+                                    FAKEX : (asset, currency, exchange)=> asset.concat(currency)
+                                    }
 
 
 function subscribeVirtual(asset, currency, bridge, exchange, callback){
@@ -145,7 +147,8 @@ function init(auth_params, logger, staticDataCallback){
             libLogger)
             
         launch(auth_params, onPriceUpdate, libLogger)
-        staticDataCallback(dict)
+        staticDataCallback({allowed_instruments : dict,
+                            allowed_exchanges: ["BINANCE", "FAKEX"]})
     })
 }
 

@@ -2005,7 +2005,7 @@ async function download_instruments(){
       dict.description = desc
       dict.exchange = "FAKEX"
       symbolDict.set(JSON.stringify([dict.symbol, "FAKEX"]), dict)
-    }
+  }
     
     return symbolDict
 }
