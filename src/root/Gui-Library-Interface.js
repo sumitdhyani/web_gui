@@ -1,7 +1,7 @@
-const { SubscriptionHandler } = require('./root/IndependentCommonUtils/SubscriptionHandler')
-const { VirtualSubscriptionHandler } = require('./root/IndependentCommonUtils/VirtualSubscriptionHandler')
-const { BasketSubscriptionHandler } = require('./root/IndependentCommonUtils/BasketSubscriptionHandler')
-const { launch, raise_request, download_instruments} = require('./root/ClientLayerLibrary/ClientInterface')
+const { SubscriptionHandler } = require('./IndependentCommonUtils/SubscriptionHandler')
+const { VirtualSubscriptionHandler } = require('./IndependentCommonUtils/VirtualSubscriptionHandler')
+const { BasketSubscriptionHandler } = require('./IndependentCommonUtils/BasketSubscriptionHandler')
+const { launch, raise_request, download_instruments} = require('./ClientLayerLibrary/ClientInterface')
                                     
 let subscriptionHandler = null
 let virtualSubscriptionHandler = null

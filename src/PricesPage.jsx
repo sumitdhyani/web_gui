@@ -189,8 +189,6 @@ function BasketPricesTab(props) {
     const context = props.context
     const subscription_functions = context.subscription_functions
     const symbol_dict = context.symbol_dict
-    const native_assets = context.native_assets
-    const native_currencies = context.native_currencies
 
     const [updateCount, setUpdateCount] = useState(0)
     const cache = useRef( (undefined !== context.cache)? new Map(context.cache.map(key=>[key, null])) : new Map() )
@@ -327,8 +325,6 @@ function PricesPage(props){
 
         context.cross_prices = {subscription_functions : context.virtual_subscription_functions,
                                 symbol_dict : context.symbol_dict,
-                                native_assets : context.native_assets,
-                                native_currencies : context.native_currencies,
                                 exchanges : exchanges}
 
         context.curr_tab = [VanillaPricesTab, context.vanilla_prices]

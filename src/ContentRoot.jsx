@@ -3,7 +3,7 @@ import PricesPage from './PricesPage'
 import IntroPage from './IntroPage'
 import {HorizontalTabs} from './CommonRenderingFunctions'
 import { useEffect, useState } from 'react'
-import constants from './Constants'
+import constants from './root/Constants'
 
 function Visual(props){
         const [updateCount, setUpdateCount] = useState(0)

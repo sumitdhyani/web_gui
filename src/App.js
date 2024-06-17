@@ -1,7 +1,7 @@
 import Visual from './ContentRoot'
 import {useEffect, useState} from 'react'
 import './App.css';
-const {init, subscribe, unsubscribe, subscribeVirtual, unsubscribeVirtual} = require('./Gui-Library-Interface')
+const {init, subscribe, unsubscribe, subscribeVirtual, unsubscribeVirtual} = require('./root/Gui-Library-Interface')
 const logger = { debug : str => console.log(str),
   info : str => console.log(str),
   warn : str => console.log(str),
