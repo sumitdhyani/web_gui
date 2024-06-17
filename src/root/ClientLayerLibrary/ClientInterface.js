@@ -1998,6 +1998,14 @@ async function download_instruments(){
         dict.exchange = "BINANCE"
         symbolDict.set(JSON.stringify([dict.symbol, "BINANCE"]), dict)
     }
+
+    for(let instrument of instrumentList){
+      const dict = JSON.parse(instrument)
+      const desc = dict.baseAsset + " vs " + dict.quoteAsset
+      dict.description = desc
+      dict.exchange = "FAKEX"
+      symbolDict.set(JSON.stringify([dict.symbol, "FAKEX"]), dict)
+    }
     
     return symbolDict
 }
