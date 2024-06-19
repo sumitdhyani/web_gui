@@ -18,18 +18,22 @@ function VanillaPricesTab(props){
    
     const tabsForDropDownRow = useRef([ {  title : "search",
                                     options : [...symbol_dict.keys()],
-                                    onOptionSelected : (evt, key) => {
+                                    onOptionSelected : (evt, instrumentKey) => {
+                                        if (!instrumentKey) {
+                                            return
+                                        }
+                                        const subscriptionKey = [JSON.parse(instrumentKey), "depth"]
                                         const currCache = cache.current
                                         console.log(`Old Cache: ${JSON.stringify([...currCache.keys()])}`)
-                                        if (key && undefined === currCache.get(key)) {
-                                            console.log(`Select Changed Handler, value: ${key}`)
+                                        if (undefined === currCache.get(JSON.stringify(subscriptionKey))) {
+                                            console.log(`Select Changed Handler, value: ${JSON.stringify(subscriptionKey)}`)
                                             try{
-                                                subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
+                                                subscription_functions.subscribe(...subscriptionKey, priceCallback)
                                             } catch (err) {
                                                 console.log(`Error handled on subscription, caught, details : ${err.message}`)
                                             }
                                             console.log(`Old Cache: ${JSON.stringify([...currCache.keys()])}`)
-                                            currCache.set(key, null)
+                                            currCache.set(JSON.stringify(subscriptionKey), null)
                                             setUpdateCount(prev=>prev+1)
                                         }
                                     }
@@ -46,7 +50,7 @@ function VanillaPricesTab(props){
         return ()=>{
             console.log("UnMounting Vanilla Prices Page")
             cacheInTheEnd.forEach((instrument, key)=>{
-                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
+                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
             })
             context.cache = [...cacheInTheEnd.keys()]
         }
@@ -60,13 +64,14 @@ function VanillaPricesTab(props){
                                                     }}
                                     key = {0}
              />,
-             <VerticalTabsForVanillaPrices  tabs = {[...cache.current.keys()].map(key=> {
-                                                                    return {symbol : symbol_dict.get(key).description,
-                                                                            update : cache.current.get(key),
+             <VerticalTabsForVanillaPrices  tabs = {[...cache.current.keys()].map(subscriptionKey=> {
+                                                                    const [symbol, exchange, type] = JSON.parse(subscriptionKey)
+                                                                    return {symbol : symbol_dict.get(JSON.stringify([symbol, exchange])).description,
+                                                                            update : cache.current.get(subscriptionKey),
                                                                             user_unsubscribe_action : ()=>{
                                                                                 const currCache = cache.current
-                                                                                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
-                                                                                currCache.delete(key)
+                                                                                subscription_functions.unsubscribe(...JSON.parse(subscriptionKey), priceCallback)
+                                                                                currCache.delete(subscriptionKey)
                                                                                 setUpdateCount(prev=>prev+1)
                                                                             },
                                                                         }
@@ -159,7 +164,7 @@ function CrossPricesTabs(props){
         return ()=>{
             console.log("UnMounting")
             cacheInTheEnd.forEach((lastUpdate, key)=>{
-                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
+                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
             })
             context.cache = [...cacheInTheEnd.keys()]
         }
@@ -173,7 +178,7 @@ function CrossPricesTabs(props){
                                                                     return {symbol : key,
                                                                             update : cache.current.get(key),
                                                                             user_unsubscribe_action : ()=>{
-                                                                                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
+                                                                                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
                                                                                 const currCache = cache.current
                                                                                 currCache.delete(key)
                                                                                 setUpdateCount(prev=>prev+1)
@@ -276,7 +281,7 @@ function BasketPricesTab(props) {
         return ()=>{
             console.log("UnMounting")
             cacheInTheEnd.forEach((lastUpdate, key)=>{
-                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
+                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
             })
             context.cache = [...cacheInTheEnd.keys()]
         }
@@ -290,7 +295,7 @@ function BasketPricesTab(props) {
                                                                     return {symbol : key,
                                                                             update : cache.current.get(key),
                                                                             user_unsubscribe_action : ()=>{
-                                                                                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
+                                                                                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
                                                                                 const currCache = cache.current
                                                                                 currCache.delete(key)
                                                                                 setUpdateCount(prev=>prev+1)

@@ -4,7 +4,7 @@ function validateRequest(request){
     if(undefined === action) {
         throw {message : `The tag 'action' is missing from the request`}
     } else if( undefined === type) {
-        throw {message : `The tag 'type' is missing from the request`}\
+        throw {message : `The tag 'type' is missing from the request`}
     }
     
     if(0 == action.localeCompare("subscribe") ||

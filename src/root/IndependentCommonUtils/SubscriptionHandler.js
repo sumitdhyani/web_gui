@@ -43,7 +43,7 @@ class SubscriptionHandler
 
     onUpdate(update){
         update = JSON.parse(update)
-        const key = JSON.stringify([update.symbol, update.exchange])
+        const key = JSON.stringify([update.symbol, update.exchange, update.message_type])
         const evt = this.subscriptionBook.get(key)
         update.key = key
         if(undefined !== evt){
