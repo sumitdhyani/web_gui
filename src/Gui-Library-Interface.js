@@ -9,7 +9,7 @@ let basketSubscriptionHandler = null
 let globalDict = null
 
 let libLogger = null
-function subscribe(symbol , exchange, callback){
+function subscribe(symbol , exchange, type, callback){
     const key = JSON.stringify([symbol, exchange])
     const symbolRecord = globalDict.get(key)
     if (undefined === symbolRecord) {
@@ -18,10 +18,10 @@ function subscribe(symbol , exchange, callback){
         throw new Error("Invalid Symbol, for this exchange")
     }
     libLogger.debug(`subscribe, arguments: ${JSON.stringify(arguments)}`)
-    subscriptionHandler.subscribe(symbol , exchange, callback)
+    subscriptionHandler.subscribe(symbol , exchange, type, callback)
 }
 
-function unsubscribe(symbol , exchange, callback){
+function unsubscribe(symbol , exchange, type, callback){
     const key = JSON.stringify([symbol, exchange])
     const symbolRecord = globalDict.get(key)
     if (undefined === symbolRecord) {
@@ -30,7 +30,7 @@ function unsubscribe(symbol , exchange, callback){
         throw new Error("Invalid Symbol, for this exchange")
     }
     libLogger.debug(`unsubscribe, arguments: ${JSON.stringify(arguments)}`)
-    subscriptionHandler.unsubscribe(symbol , exchange, callback)
+    subscriptionHandler.unsubscribe(symbol , exchange, type, callback)
 }
 
 let exchangeSymbolNameGenerators = {BINANCE : (asset, currency, exchange)=> asset.concat(currency),
@@ -123,17 +123,19 @@ function init(auth_params, logger, staticDataCallback){
         globalDict = dict
         libLogger = logger
         libLogger.debug(JSON.stringify(dict))
-        subscriptionHandler = new SubscriptionHandler( (symbol, exchange)=>{
+        subscriptionHandler = new SubscriptionHandler( (symbol, exchange, type)=>{
                                                         raise_request({
                                                                 action : "subscribe",
                                                                 symbol : symbol,
-                                                                exchange : exchange})
+                                                                exchange : exchange,
+                                                                type: type})
                                                         },
-                                                        (symbol, exchange)=>{
+                                                        (symbol, exchange, type)=>{
                                                             raise_request({
                                                                 action : "unsubscribe",
                                                                 symbol : symbol,
-                                                                exchange : exchange})
+                                                                exchange : exchange,
+                                                                type: type})
                                                         },
                                                         libLogger)
 

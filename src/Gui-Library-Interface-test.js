@@ -19,10 +19,10 @@ function mainLoop(symbolDict){
           function actionForNormalSymbol(action, symbol){
         try{
             if(0 === action.localeCompare("subscribe")){
-                subscribe(symbol, "BINANCE", onUpdate)
+                subscribe(symbol, "BINANCE", "depth", onUpdate)
             }
             else{
-                unsubscribe(symbol, "BINANCE", onUpdate)
+                unsubscribe(symbol, "BINANCE", "depth", onUpdate)
             }
         }
         catch(err){
