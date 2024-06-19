@@ -107,8 +107,8 @@ class CurrencyAndCoefficientMultiplexedBasketSubscriptionHandler {
         const key = JSON.stringify([currency, exchange])
         if (!(this.currencyToBasketSubscriptions.has(key))) {
             const basketSubscriptionHandler = new BasketSubscriptionHandler(
-                                                (symbol, callback)=>this.depthSubscriber(symbol, exchange, callback), 
-                                                (symbol, callback)=>this.depthUnsubscriber(symbol, exchange, callback)
+                                                (symbol, callback)=>this.depthSubscriber(symbol, exchange, "last", callback), 
+                                                (symbol, callback)=>this.depthUnsubscriber(symbol, exchange, "last", callback)
                                             )
             this.currencyToBasketSubscriptions.set(key, basketSubscriptionHandler)
         }

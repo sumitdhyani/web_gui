@@ -94,8 +94,8 @@ class VirtualSubscriptionHandler
             //The cosnstructor start the external subscription sort RAII 
             const exchange_side_asset_symbol = exchangeSymbolNameGenerator(asset, bridge, exchange)
             const exchange_side_currency_symbol = exchangeSymbolNameGenerator(currency, bridge, exchange)
-            virtualSubscriberUnit = new VirtualSubscriberUnit((symbol, callback)=>this.depthSubscriber(symbol, exchange, callback),
-                                                              (symbol, callback)=>this.depthUnsubscriber(symbol, exchange, callback),
+            virtualSubscriberUnit = new VirtualSubscriberUnit((symbol, callback)=>this.depthSubscriber(symbol, exchange, "last", callback),
+                                                              (symbol, callback)=>this.depthUnsubscriber(symbol, exchange, "last", callback),
                                                               {asset : asset,
                                                                currency : currency,
                                                                bridge : bridge,

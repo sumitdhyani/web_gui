@@ -24,7 +24,7 @@ function VanillaPricesTab(props){
                                         if (key && undefined === currCache.get(key)) {
                                             console.log(`Select Changed Handler, value: ${key}`)
                                             try{
-                                                subscription_functions.subscribe(...JSON.parse(key), priceCallback)
+                                                subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
                                             } catch (err) {
                                                 console.log(`Error handled on subscription, caught, details : ${err.message}`)
                                             }
@@ -39,14 +39,14 @@ function VanillaPricesTab(props){
         console.log("Mounting Vanilla Prices Page")
         const arr = [...cache.current.keys()]
         arr.forEach(key=>{
-            subscription_functions.subscribe(...JSON.parse(key), priceCallback)
+            subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
         })
 
         const cacheInTheEnd = cache.current
         return ()=>{
             console.log("UnMounting Vanilla Prices Page")
             cacheInTheEnd.forEach((instrument, key)=>{
-                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
+                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
             })
             context.cache = [...cacheInTheEnd.keys()]
         }
@@ -65,7 +65,7 @@ function VanillaPricesTab(props){
                                                                             update : cache.current.get(key),
                                                                             user_unsubscribe_action : ()=>{
                                                                                 const currCache = cache.current
-                                                                                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
+                                                                                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
                                                                                 currCache.delete(key)
                                                                                 setUpdateCount(prev=>prev+1)
                                                                             },
@@ -137,7 +137,7 @@ function CrossPricesTabs(props){
                                                         if (undefined === currCache.get(key)) {
                                                             console.log(`Select Changed Handler, value: ${key}`)
                                                             try{
-                                                                subscription_functions.subscribe(...JSON.parse(key), priceCallback)
+                                                                subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
                                                             } catch (err) {
                                                                 console.log(`Error handled on subscription caught, details : ${err.message}`)
                                                             }
@@ -152,14 +152,14 @@ function CrossPricesTabs(props){
     useEffect(()=>{
         console.log("Mounting")
         cache.current.forEach((lastUpdate, key)=>{
-            subscription_functions.subscribe(...JSON.parse(key), priceCallback)
+            subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
         })
 
         const cacheInTheEnd = cache.current
         return ()=>{
             console.log("UnMounting")
             cacheInTheEnd.forEach((lastUpdate, key)=>{
-                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
+                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
             })
             context.cache = [...cacheInTheEnd.keys()]
         }
@@ -173,7 +173,7 @@ function CrossPricesTabs(props){
                                                                     return {symbol : key,
                                                                             update : cache.current.get(key),
                                                                             user_unsubscribe_action : ()=>{
-                                                                                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
+                                                                                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
                                                                                 const currCache = cache.current
                                                                                 currCache.delete(key)
                                                                                 setUpdateCount(prev=>prev+1)
@@ -253,7 +253,7 @@ function BasketPricesTab(props) {
                                             //             if (undefined === currCache.get(key)) {
                                             //                 console.log(`Select Changed Handler, value: ${key}`)
                                             //                 try{
-                                            //                     subscription_functions.subscribe(...JSON.parse(key), priceCallback)
+                                            //                     subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
                                             //                 } catch (err) {
                                             //                     console.log(`Error handled on subscription caught, details : ${err.message}`)
                                             //                 }
@@ -269,14 +269,14 @@ function BasketPricesTab(props) {
     useEffect(()=>{
         console.log("Mounting")
         cache.current.forEach((lastUpdate, key)=>{
-            subscription_functions.subscribe(...JSON.parse(key), priceCallback)
+            subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
         })
 
         const cacheInTheEnd = cache.current
         return ()=>{
             console.log("UnMounting")
             cacheInTheEnd.forEach((lastUpdate, key)=>{
-                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
+                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
             })
             context.cache = [...cacheInTheEnd.keys()]
         }
@@ -290,7 +290,7 @@ function BasketPricesTab(props) {
                                                                     return {symbol : key,
                                                                             update : cache.current.get(key),
                                                                             user_unsubscribe_action : ()=>{
-                                                                                subscription_functions.unsubscribe(...JSON.parse(key), priceCallback)
+                                                                                subscription_functions.unsubscribe(...JSON.parse(key), "depth", priceCallback)
                                                                                 const currCache = cache.current
                                                                                 currCache.delete(key)
                                                                                 setUpdateCount(prev=>prev+1)

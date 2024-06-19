@@ -23,8 +23,8 @@ class RequestSerializers{
     }
 }
 
-function subscribe(symbol, exchange){
-    const key = JSON.stringify([symbol, exchange])
+function subscribe(symbol, exchange, type){
+    const key = JSON.stringify([symbol, exchange, type])
 
     actionAntiAction.antiAct(key, ()=>{
         requestSerializer.requestToSend(key, sock, 'subscribe', (result)=>{
@@ -34,12 +34,12 @@ function subscribe(symbol, exchange){
             }else {
                 logger.warn(`subscriptionFailure for: ${key}, reason: ${result.reason}`)
             }
-        }, symbol, exchange)
+        }, symbol, exchange, type)
     })
 }
 
-function unsubscribe(symbol, exchange){
-    const key = JSON.stringify([symbol, exchange])
+function unsubscribe(symbol, exchange, type){
+    const key = JSON.stringify([symbol, exchange, type])
 
     actionAntiAction.act(key, 10000, ()=>{
         requestSerializer.requestToSend(key, sock, 'unsubscribe', (result)=>{
@@ -49,7 +49,7 @@ function unsubscribe(symbol, exchange){
             }else {
                 logger.warn(`unsubscriptionFailure for: ${key}, reason: ${result.reason}`)
             }
-        }, symbol, exchange)
+        }, symbol, exchange, type)
     })
 }
 
@@ -66,11 +66,11 @@ function forward(intent){
 }
 
 function forwardSubscription(subscription){
-    subscribe(subscription.symbol, subscription.exchange)
+    subscribe(subscription.symbol, subscription.exchange, subscription.type)
 }
 
 function forwardUnsubscription(subscription){
-    unsubscribe(subscription.symbol, subscription.exchange)
+    unsubscribe(subscription.symbol, subscription.exchange, subscription.type)
 }
 
 function disconnect(){

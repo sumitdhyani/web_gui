@@ -14,27 +14,27 @@ class SubscriptionHandler
         this.subscriptionBook = new Map()
     }
 
-    subscribe(symbol, exchange, callback){
-        const key = JSON.stringify([symbol, exchange])
+    subscribe(symbol, exchange, type, callback){
+        const key = JSON.stringify([symbol, exchange, type])
         let evt = this.subscriptionBook.get(key)
 
         if(undefined === evt){
             evt = new Event()
             this.subscriptionBook.set(key, evt)
-            this.depthSubscriber(symbol, exchange)
+            this.depthSubscriber(symbol, exchange, type)
         }
 
         evt.registerCallback(callback) 
     }
 
-    unsubscribe(symbol, exchange, callback){
-        const key = JSON.stringify([symbol, exchange])
+    unsubscribe(symbol, exchange, type, callback){
+        const key = JSON.stringify([symbol, exchange, type])
         const evt = this.subscriptionBook.get(key)
         if(undefined !== evt){
             evt.unregisterCallback(callback)
             if(evt.empty()){
                 this.subscriptionBook.delete(key)
-                this.depthUnsubscriber(symbol, exchange)
+                this.depthUnsubscriber(symbol, exchange, type)
             }
         }
         else
