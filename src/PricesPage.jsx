@@ -22,7 +22,7 @@ function VanillaPricesTab(props){
                                         if (!instrumentKey) {
                                             return
                                         }
-                                        const subscriptionKey = [JSON.parse(instrumentKey), "depth"]
+                                        const subscriptionKey = [...JSON.parse(instrumentKey), "depth"]
                                         const currCache = cache.current
                                         console.log(`Old Cache: ${JSON.stringify([...currCache.keys()])}`)
                                         if (undefined === currCache.get(JSON.stringify(subscriptionKey))) {
@@ -43,7 +43,7 @@ function VanillaPricesTab(props){
         console.log("Mounting Vanilla Prices Page")
         const arr = [...cache.current.keys()]
         arr.forEach(key=>{
-            subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
+            subscription_functions.subscribe(...JSON.parse(key), priceCallback)
         })
 
         const cacheInTheEnd = cache.current

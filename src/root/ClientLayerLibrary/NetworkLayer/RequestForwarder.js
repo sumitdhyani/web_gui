@@ -94,7 +94,7 @@ function connect(serverAddress, callback, libLogger){//Server address <ip>:<port
     })
 
     sock.on('depth', (depth)=>{
-        console.log(depth)
+        //console.log(depth)
         callback(depth)
     })
 
