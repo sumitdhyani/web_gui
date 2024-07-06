@@ -5,7 +5,7 @@ const logger = {  debug : str =>console.log(str),
     error : (str) =>console.log(str)
  }
 
- init({auth_server : ["http://165.232.187.129:90","http://143.244.139.3:90","http://143.244.131.67:90"], credentials : {user : "test_user", password : "test_pwd"}},
+ init({auth_server : ["http://node_1:90","http://node_1:91","http://node_1:92"], credentials : {user : "test_user", password : "test_pwd"}},
  //init({auth_server : "http://127.0.0.1:90", credentials : {user : "test_user", password : "test_pwd"}},
       logger,
       mainLoop)
@@ -14,15 +14,16 @@ function onUpdate(update){
     logger.debug(JSON.stringify(update))
 }
 
-function mainLoop(symbolDict){
+function mainLoop(meta){
+    const symbolDict = meta.allowed_instruments
     //symbolDict.forEach((item, key)=>{logger.debug(`Key: ${key}`)})
           function actionForNormalSymbol(action, symbol){
         try{
             if(0 === action.localeCompare("subscribe")){
-                subscribe(symbol, "BINANCE", "depth", onUpdate)
+                subscribe(symbol, "BINANCE", "trade", onUpdate)
             }
             else{
-                unsubscribe(symbol, "BINANCE", "depth", onUpdate)
+                unsubscribe(symbol, "BINANCE", "trade", onUpdate)
             }
         }
         catch(err){
@@ -98,16 +99,16 @@ function mainLoop(symbolDict){
     const filteredSymbols = [...symbolDict.values()].filter( obj=> 0 === obj.quoteAsset.localeCompare(allowedBridgeCurrency))
     for(let i = 0; i < numInstruments; i++){
         //cyclicalFunc(filteredSymbols[i].symbol)
-        //cyclicalFuncForVirtual(filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset, allowedBridgeCurrency)
+        cyclicalFuncForVirtual(filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset, allowedBridgeCurrency)
         let reqId = filteredSymbols[i].symbol.concat(filteredSymbols[i+1].symbol)
-        const returnAsItIs = (price) => { return price }
-        cyclicalFuncForBasket({
-                                reqId : reqId,
-                                symbols : [filteredSymbols[i].symbol, filteredSymbols[i+1].symbol],
-                                coefficients: [3,2],
-                                currency: "USDT",
-                                priceConverters: [returnAsItIs, returnAsItIs],
-                                exchange: "BINANCE"}
-        )
+        //const returnAsItIs = (price) => { return price }
+        //cyclicalFuncForBasket({
+        //                        reqId : reqId,
+        //                        symbols : [filteredSymbols[i].symbol, filteredSymbols[i+1].symbol],
+        //                        coefficients: [3,2],
+        //                        currency: "USDT",
+        //                        priceConverters: [returnAsItIs, returnAsItIs],
+        //                        exchange: "BINANCE"}
+        //)
     }
 }   

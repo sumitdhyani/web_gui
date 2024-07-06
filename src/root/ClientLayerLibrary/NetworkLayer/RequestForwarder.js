@@ -98,6 +98,11 @@ function connect(serverAddress, callback, libLogger){//Server address <ip>:<port
         callback(depth)
     })
 
+    sock.on('trade', (trade)=>{
+        //console.log(depth)
+        callback(trade)
+    })
+
     sock.on("connect_error", (reason) => {
         console.log(`connect_error, description: ${JSON.stringify(reason)}`)
         setTimeout(()=>disconnectionHandler(reason), 0);

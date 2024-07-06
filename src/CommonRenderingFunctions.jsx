@@ -101,7 +101,7 @@ const VerticalTabForCrossPrices = React.memo((props)=>{
   return (
     <div className="row">
       <GetWidget className="button" title="-" widget_id={constants.widget_ids.button} onClick={()=>tab.user_unsubscribe_action()}/>
-      <h4 className="tab">{tab.symbol} {"=>"} {tab.update? [tab.update.bids[0][0], "|", tab.update.bids[0][1],  "<==>", tab.update.asks[0][0], "|", tab.update.asks[0][1]] : ""}</h4>
+      <h4 className="tab">{tab.symbol} {"=>"} {tab.update? tab.update.price : ""}</h4>
     </div>
   )
 });

@@ -142,7 +142,7 @@ function CrossPricesTabs(props){
                                                         if (undefined === currCache.get(key)) {
                                                             console.log(`Select Changed Handler, value: ${key}`)
                                                             try{
-                                                                subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
+                                                                subscription_functions.subscribe(...JSON.parse(key), priceCallback)
                                                             } catch (err) {
                                                                 console.log(`Error handled on subscription caught, details : ${err.message}`)
                                                             }
@@ -157,7 +157,7 @@ function CrossPricesTabs(props){
     useEffect(()=>{
         console.log("Mounting")
         cache.current.forEach((lastUpdate, key)=>{
-            subscription_functions.subscribe(...JSON.parse(key), "depth", priceCallback)
+            subscription_functions.subscribe(...JSON.parse(key), priceCallback)
         })
 
         const cacheInTheEnd = cache.current

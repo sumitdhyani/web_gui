@@ -4,57 +4,47 @@ const [SpuriousUnsubscription, DuplicateSubscription] = [appSpecificErrors.Spuri
 const Event = CommonUtils.Event
 
 class VirtualSubscriberUnit{
-    constructor(depthSubscriber,
-                depthUnsubscriber,
+    constructor(subscriber,
+                unsubscriber,
                 staticInfo,
                 logger,
                 assetSideExchangeSymbol,
                 currencySideExchangeSymbol,
                 callback){
         this.logger = logger
-        this.assetBestBidAsk = null
-        this.currencyBestBidAsk = null
+        this.assetPrice = null
+        this.currencyPrice = null
         this.staticInfo = staticInfo
 
         const onAssetSideUpdate = (update)=>{
-            this.assetBestBidAsk = [update.bids[0], update.asks[0]]
-            if(null === this.currencyBestBidAsk){
-                return
+            this.assetPrice = update.price
+            if(null !== this.currencyPrice){
+                this.raisePriceUpdateEvt((this.assetPrice/this.currencyPrice).toFixed(4))
             }
-            this.raisePriceUpdateEvt()
         }
 
         const onCurrencySideUpdate = (update)=>{
-            this.currencyBestBidAsk = [update.bids[0], update.asks[0]]
-            if(null === this.assetBestBidAsk){
-                return
+            this.currencyPrice = update.price
+            if(null !== this.assetPrice){
+                this.raisePriceUpdateEvt((this.assetPrice/this.currencyPrice).toFixed(4))
             }
-            this.raisePriceUpdateEvt()
         }
 
-        this.unsubscribeDepths = ()=>{
-            depthUnsubscriber(assetSideExchangeSymbol, onAssetSideUpdate)
-            depthUnsubscriber(currencySideExchangeSymbol, onCurrencySideUpdate)
+        this.unsubscribe = ()=>{
+            unsubscriber(assetSideExchangeSymbol, onAssetSideUpdate)
+            unsubscriber(currencySideExchangeSymbol, onCurrencySideUpdate)
         }
 
         this.evt = new Event()
         this.evt.registerCallback(callback)
         
-        depthSubscriber(assetSideExchangeSymbol, onAssetSideUpdate)
-        depthSubscriber(currencySideExchangeSymbol, onCurrencySideUpdate)
+        subscriber(assetSideExchangeSymbol, onAssetSideUpdate)
+        subscriber(currencySideExchangeSymbol, onCurrencySideUpdate)
     }
 
-    raisePriceUpdateEvt(){
-        let [assetBestBidLevel , assetBestAskLevel] = this.assetBestBidAsk
-        let [currencyBestBidLevel , currencyBestAskLevel] = this.currencyBestBidAsk
-        let [assetBestBP, assetBestBQ] = assetBestBidLevel
-        let [assetBestAP, assetBestAQ] = assetBestAskLevel
-        let [currencyBestBP, currencyBestBQ] = currencyBestBidLevel
-        let [currencyBestAP, currencyBestAQ] = currencyBestAskLevel
-
+    raisePriceUpdateEvt(virtualPrice){
         const dynamicInfo = this.staticInfo
-        dynamicInfo.bids = [[assetBestAP/currencyBestBP, assetBestAQ]]
-        dynamicInfo.asks = [[assetBestBP/currencyBestAP, currencyBestAQ]]
+        dynamicInfo.price = virtualPrice
         this.evt.raise(dynamicInfo)
     }
 
@@ -67,7 +57,7 @@ class VirtualSubscriberUnit{
     removeSubscriber(callback){
         this.evt.unregisterCallback(callback)
         if (this.evt.empty()){
-            this.unsubscribeDepths()
+            this.unsubscribe()
         }
     }
 
@@ -78,11 +68,11 @@ class VirtualSubscriberUnit{
 
 class VirtualSubscriptionHandler
 {
-    constructor(depthSubscriber, 
-                depthUnsubscriber,
+    constructor(subscriber, 
+                unsubscriber,
                 logger){
-        this.depthSubscriber = depthSubscriber
-        this.depthUnsubscriber = depthUnsubscriber
+        this.depthSubscriber = subscriber
+        this.depthUnsubscriber = unsubscriber
         this.logger = logger
         this.subscriptionBook = new Map()
     }
@@ -94,8 +84,8 @@ class VirtualSubscriptionHandler
             //The cosnstructor start the external subscription sort RAII 
             const exchange_side_asset_symbol = exchangeSymbolNameGenerator(asset, bridge, exchange)
             const exchange_side_currency_symbol = exchangeSymbolNameGenerator(currency, bridge, exchange)
-            virtualSubscriberUnit = new VirtualSubscriberUnit((symbol, callback)=>this.depthSubscriber(symbol, exchange, "last", callback),
-                                                              (symbol, callback)=>this.depthUnsubscriber(symbol, exchange, "last", callback),
+            virtualSubscriberUnit = new VirtualSubscriberUnit((symbol, callback)=>this.depthSubscriber(symbol, exchange, "trade", callback),
+                                                              (symbol, callback)=>this.depthUnsubscriber(symbol, exchange, "trade", callback),
                                                               {asset : asset,
                                                                currency : currency,
                                                                bridge : bridge,
