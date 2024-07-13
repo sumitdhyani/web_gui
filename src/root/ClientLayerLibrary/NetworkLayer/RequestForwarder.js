@@ -87,7 +87,7 @@ function connect(serverAddress, callback, libLogger){//Server address <ip>:<port
     })
 
     sock.on('disconnect', (reason)=>{
-        console.log(`disconnect, description: ${JSON.stringify(reason)}`)
+        libLogger.error(`disconnect, description: ${JSON.stringify(reason)}`)
         callback(JSON.stringify({ message_type : "disconnection", reason : reason}))
         subscriptionBook.clear()
         setTimeout(()=>disconnectionHandler(reason), 0);
@@ -104,7 +104,7 @@ function connect(serverAddress, callback, libLogger){//Server address <ip>:<port
     })
 
     sock.on("connect_error", (reason) => {
-        console.log(`connect_error, description: ${JSON.stringify(reason)}`)
+        libLogger.error(`connect_error, description: ${JSON.stringify(reason)}`)
         setTimeout(()=>disconnectionHandler(reason), 0);
     });
 }

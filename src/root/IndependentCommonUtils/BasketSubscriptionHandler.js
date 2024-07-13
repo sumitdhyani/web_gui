@@ -102,8 +102,8 @@ function unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubs
 
     matter.evt.unregisterCallback(callback)
     if (matter.evt.empty()) {
-        unsubscribeList(symbols, exchange, unsubscriptionFunction, matter.coefficientApplier)
-        m2.delete(key)
+        unsubscribeList(symbols, exchange, unsubscriptionFunction, matter.callback)
+        m1.delete(key)
     }
 }
 

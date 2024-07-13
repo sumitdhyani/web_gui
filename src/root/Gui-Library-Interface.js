@@ -5,7 +5,6 @@ const { launch, raise_request, download_instruments} = require('./ClientLayerLib
                                     
 let subscriptionHandler = null
 let virtualSubscriptionHandler = null
-let basketSubscriptionHandler = null
 let globalDict = null
 
 let libLogger = null
@@ -137,7 +136,7 @@ function subscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exch
 }
 
 function unsubscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exchange, callback){
-    libLogger.debug(`subscribeBasket, arguments: ${JSON.stringify(arguments)}`)
+    libLogger.debug(`unsubscribeBasket, arguments: ${JSON.stringify(arguments)}`)
     if (assets.length !== coefficients.length) {
         throw new Error("No. of assets should be equal to the no. of coefficients")
     }

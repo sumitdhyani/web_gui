@@ -1,9 +1,21 @@
 const {init, subscribe, unsubscribe, subscribeVirtual, unsubscribeVirtual, subscribeBasket, unsubscribeBasket} = require('./Gui-Library-Interface')
-const logger = {  debug : str =>console.log(str),
-    info : (str) =>console.log(str),
-    warn : (str) =>console.log(str),
-    error : (str) =>console.log(str)
- }
+function getFormattedTimestamp() {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+    return `${hours}:${minutes}:${seconds}`
+}
+
+const logger = {  debug : str => console.log(`${getFormattedTimestamp()}: ${str}`),
+    info : (str) =>console.log(`${getFormattedTimestamp()}: ${str}`),
+    warn : (str) =>console.log(`${getFormattedTimestamp()}: ${str}`),
+    error : (str) =>console.log(`${getFormattedTimestamp()}: ${str}`)
+}
 
  init({auth_server : ["http://node_1:90","http://node_1:91","http://node_1:92"], credentials : {user : "test_user", password : "test_pwd"}},
  //init({auth_server : "http://127.0.0.1:90", credentials : {user : "test_user", password : "test_pwd"}},
@@ -56,7 +68,7 @@ function mainLoop(meta){
                                     params.exchange,
                                     onUpdate)
                 } catch(err) {
-                    console.log(err.message)
+                    logger.warn(`Error: ${err.message} stack: ${err.stack}`)
                 }
             }
             else{
@@ -68,7 +80,7 @@ function mainLoop(meta){
                                       params.exchange,
                                       onUpdate)
                 } catch(err) {
-                    console.log(err.message)
+                    logger.warn(`Error: ${err.message} stack: ${err.stack}`)
                 }
             }
         }
@@ -103,7 +115,7 @@ function mainLoop(meta){
                     actionForBasket({...params, action : "unsubscribe"})
                     cyclicalFuncForBasket(params)
                 }, 10000)
-        }, 5000)
+        }, 12000)
     }
     
     const numInstruments = 2
