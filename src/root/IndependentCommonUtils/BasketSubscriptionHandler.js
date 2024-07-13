@@ -3,146 +3,151 @@ const appSpecificErrors = require('./appSpecificErrors')
 const [SpuriousUnsubscription, DuplicateSubscription] = [appSpecificErrors.SpuriousUnsubscription, appSpecificErrors.DuplicateSubscription]
 const Event = CommonUtils.Event
 
-class BasketSubscriptionHandler {
-    constructor(depthSubscriber, depthUnsubscriber) {
-        this.depthSubscriber = depthSubscriber
-        this.depthUnsubscriber = depthUnsubscriber
-        this.assetPriceEvents = new Map()
-    }
+let m2 = new Map()
+function subscribeList(symbols, exchange, subscriptionFunction, callback) {
+    const key = JSON.stringify(...symbols, exchange)
+    let matter = m2.get(key)
+    if (undefined === matter) {
+        const symbolToIndex = new Map()
+        symbols.forEach((symbol, index)=>{
+            symbolToIndex.set(symbol, index)
+        })
 
-    subscribe(symbols, callback) {
-        symbols.forEach(symbol => {
-            if (!(this.assetPriceEvents.has(symbol))){
-                const evt = new Event()
-                this.assetPriceEvents.set(symbol, evt)
-                this.depthSubscriber(symbol, update=> evt.raise(update) )
+        let allUpdatesReceived = false;
+        function checkIfAllUpdatesReceived() {
+            if(allUpdatesReceived) {
+                return true
             }
 
-            const evt = this.assetPriceEvents.get(symbol)
-            evt.registerCallback(callback)
+            allUpdatesReceived =
+            prices.reduce((prev, price)=>{
+                return prev && (price != null)
+            }, true)
+
+            return allUpdatesReceived
+        }
+
+        const prices = new Array(symbols.length).fill(null)
+        const priceEvt = new Event()
+        matter =
+        {
+            listUpdator : update=>{
+                            prices[symbolToIndex.get(update.symbol)] = update
+                            if (checkIfAllUpdatesReceived()) {
+                                priceEvt.raise(prices)
+                            }
+                          },
+            evt         : priceEvt
+        }
+
+        m2.set(key, matter)
+
+        symbols.forEach(symbol => {
+            subscriptionFunction(symbol, exchange, "trade", matter.listUpdator)
         })
     }
     
-    unsubscribe(symbols, callback) {
-        symbols.forEach(symbol => {
-            if (!(this.assetPriceEvents.has(symbol))) {
-                throw new SpuriousUnsubscription(`The symbol ${symbol} is not currently subscribed`)
-            }
+    matter.evt.registerCallback(callback)
+}
 
-            const evt = this.assetPriceEvents.get(symbol)
-            evt.unregisterCallback(callback)
-            if (evt.empty()){
-                this.assetPriceEvents.delete(symbol)
-                this.depthUnsubscriber(symbol)
-            }
+
+function unsubscribeList(symbols, exchange, unsubscriptionFunction, callback) {
+    const key = JSON.stringify(...symbols, exchange)
+    const matter = m2.get(key)
+    if (undefined === matter) {
+        throw new Error(`Spurious unsubscription for key: ${key}`)
+    }
+
+    matter.evt.unregisterCallback(callback)
+    if (matter.evt.empty()) {
+        symbols.forEach(symbol=>{
+            unsubscriptionFunction(symbol, exchange, "trade", matter.listUpdator)
         })
+        m2.delete(key)
+    }
+
+    
+}
+
+
+const m1 = new Map()
+function subscribeListwithCoefficients(symbols, coefficients, exchange, subscriptionFunction, callback){
+    const key = JSON.stringify([...symbols, ...coefficients, exchange])
+    let matter = m1.get(key)
+    if (undefined === matter) {
+        const consolidatedPriceEvt = new Event()
+        matter =
+        {
+            callback :  prices=>{
+                            consolidatedPriceEvt.raise(prices.reduce((prev, price, index)=>{
+                                return prev + coefficients[index] * price                  
+                            }))
+                        },
+            evt      :  consolidatedPriceEvt
+        }
+
+        m1.set(key, matter)
+        subscribeList(symbols, exchange, subscriptionFunction, matter.callback)
+    }
+    
+    matter.evt.registerCallback(callback)
+}
+
+function unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubscriptionFunction, callback){
+    const key = JSON.stringify([...symbols, ...coefficients, exchange])
+    const matter = m1.get(key)
+    if (undefined === matter) {
+        throw new Error(`Spurious unsubscription for key: ${key}`)
+    }
+
+    matter.evt.unregisterCallback(callback)
+    if (matter.evt.empty()) {
+        unsubscribeList(symbols, exchange, unsubscriptionFunction, matter.coefficientApplier)
+        m2.delete(key)
     }
 }
 
 
-class BasketSubscriptionUnit {
-    constructor(assets) {
-        this.assets = assets
-        this.updates = new Map()
-        this.allPricesReceived = false
-        this.evt = new Event()
+const m3 = new Map()
+function subscribeBasket(symbols, coefficients, exchange, subscriptionFunction, conversionSymbol, callback){
+    const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionSymbol])
+    let matter = m3.get(key)
+    if (undefined === matter) {
+        const priceConversionEvt = new Event()
+        let conversionFactor = null
+        matter = {
+            conversionCallback  :   price=> { conversionFactor = 1/price },
+            conversionApplier   :   price=>{
+                                        if (null != conversionFactor ) {
+                                            priceConversionEvt.raise(price*conversionFactor)
+                                        }
+                                    },
+            evt                 :   priceConversionEvt   
+        }
+
+        m3.set(key, matter)
+        subscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        subscribeListwithCoefficients(symbols, coefficients, exchange, subscriptionFunction, matter.conversionApplier)
     }
 
-    checkIfAllUpdatesRecd(update) {
-        if (this.allPricesReceived) {
-            return
-        }
-        
-        this.updates.set(update.symbol, (update.bids[0][0] + update.asks[0][0]) / 2)
-        if (this.updates.size === this.assets.length) {
-            this.allPricesReceived = true
-        }
-    }
+    matter.evt.registerCallback(callback)
+}
 
-    onUpdate(update) {
-        if (this.allPricesReceived || this.checkIfAllUpdatesRecd(update)) {
-            this.updates.set(update.symbol, (update.bids[0][0] + update.asks[0][0]) / 2)
-            const updateArr = []
-            this.updates.forEach((value, key) => {
-                updateArr.push(value)
-            })
-            this.evt.raise(updateArr)
-        }
-    }
+function unsubscribeBasket(symbols, coefficients, exchange, unsubscriptionFunction, conversionSymbol, callback){
+    const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionSymbol])
+    const matter = m3.get(key)
+    if (undefined === matter) {
+        throw new Error(`Spurious unsubscription for key: ${key}`)
+    } 
 
-    subscribe(callback) {
-        this.evt.registerCallback(callback)
+    matter.evt.unregisterCallback(callback)
+    if (matter.evt.empty()) {
+        unsubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubscriptionFunction, matter.conversionApplier)
+        m3.delete(key)
     }
 }
 
-function applyCoefficients(coefficients, updates) {
-    return updates.reduce((acc, update, index) => {
-        return acc + update * coefficients[index]
-    }, 0)
-}
 
-function applyConverters(converters, updates) {
-    let res = []
-    for( let i = 0; i < converters.length; i++){
-        res.push(converters[i](updates[i]))
-    }
-    return res
-}
-
-class CurrencyAndCoefficientMultiplexedBasketSubscriptionHandler {
-    constructor(depthSubscriber, depthUnsubscriber, logger) {
-        this.depthSubscriber = depthSubscriber
-        this.depthUnsubscriber = depthUnsubscriber
-        //key currency, value BasketSubscriptionHandler
-        this.currencyToBasketSubscriptions = new Map()
-        //key reqId, value unsubscriptionAction
-        this.unsubscriptionActions = new Map()
-    }
-
-    subscribe(reqId, symbols, coefficients, currency, priceConverters, exchange, callback) {
-        if(!( symbols.length === coefficients.length && coefficients.length === priceConverters.length)){
-            throw new Error("The length of symbols, coefficients and priceConverters should be equal")
-        }
-
-        const key = JSON.stringify([currency, exchange])
-        if (!(this.currencyToBasketSubscriptions.has(key))) {
-            const basketSubscriptionHandler = new BasketSubscriptionHandler(
-                                                (symbol, callback)=>this.depthSubscriber(symbol, exchange, "last", callback), 
-                                                (symbol, callback)=>this.depthUnsubscriber(symbol, exchange, "last", callback)
-                                            )
-            this.currencyToBasketSubscriptions.set(key, basketSubscriptionHandler)
-        }
-
-        const basketSubscriptionHandler = this.currencyToBasketSubscriptions.get(key)
-        const basketSubscriptionUnit = new BasketSubscriptionUnit(symbols)
-        const callbackForSubscriptionUnit = (updates) => {
-            const updateObj = {
-                exchange : exchange,
-                basket: symbols,
-                currency: currency,
-                coefficients: coefficients,
-                net_value : applyCoefficients(coefficients, applyConverters(priceConverters, updates))
-            }
-            callback(updateObj)
-        }
-        const callbackForBasketSubscriptionHandler = (updates) => { basketSubscriptionUnit.onUpdate(updates) }
-        basketSubscriptionUnit.subscribe(callbackForSubscriptionUnit)
-        basketSubscriptionHandler.subscribe(symbols, callbackForBasketSubscriptionHandler)
-
-        this.unsubscriptionActions.set(reqId, ()=>{
-            basketSubscriptionUnit.unsubscribe(callbackForSubscriptionUnit)
-            basketSubscriptionHandler.unsubscribe(symbols, callbackForBasketSubscriptionHandler)
-        })  
-    }
-
-    unsubscribe(reqId) {
-        if (this.unsubscriptionActions.has(reqId)) {
-            this.unsubscriptionActions.get(reqId)()
-            this.unsubscriptionActions.delete(reqId)
-        } else {
-            throw new SpuriousUnsubscription(`The reqId ${reqId} is not currently subscribed`)
-        }
-    }
-}
-
-module.exports.BasketSubscriptionHandler = CurrencyAndCoefficientMultiplexedBasketSubscriptionHandler
+module.exports.subscribeBasket = subscribeBasket
+module.exports.unsubscribeBasket = unsubscribeBasket

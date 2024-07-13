@@ -45,19 +45,23 @@ function mainLoop(meta){
         }
     }
 
-    function actionForBasket(params) {//(action, reqId, symbols, coefficients, currency, priceConverters, exchange){ 
+    function actionForBasket(params) {//(assets, coefficients, bridgeCurrency, targetAsset, exchange, callback){ 
         try{
             if(0 === params.action.localeCompare("subscribe")){
-                subscribeBasket(params.reqId,
-                                params.symbols,
+                subscribeBasket(params.assets,
                                 params.coefficients,
-                                params.currency,
-                                params.priceConverters,
+                                params.allowedBridgeCurrency,
+                                params.targetAsset,
                                 params.exchange,
                                 onUpdate)
             }
             else{
-                unsubscribeBasket(params.reqId)
+                unsubscribeBasket(params.assets,
+                                  params.coefficients,
+                                  params.allowedBridgeCurrency,
+                                  params.targetAsset,
+                                  params.exchange,
+                                  onUpdate)
             }
         }
         catch(err){
@@ -84,11 +88,11 @@ function mainLoop(meta){
         }, 5000)
     }
 
-    const cyclicalFuncForBasket = (params) =>{//(reqId, symbols, coefficients, currency, priceConverters, exchange) =>{
+    const cyclicalFuncForBasket = (params) =>{//(assets, coefficients, bridgeCurrency, targetAsset, exchange, callback) =>{
         setTimeout(()=> {
             actionForBasket({...params, action: "subscribe"})
                 setTimeout(()=>{
-                    actionForBasket({reqId : params.reqId, action : "unsubscribe"})
+                    actionForBasket({...params, action : "unsubscribe"})
                     cyclicalFuncForBasket(params)
                 }, 10000)
         }, 5000)
@@ -99,16 +103,14 @@ function mainLoop(meta){
     const filteredSymbols = [...symbolDict.values()].filter( obj=> 0 === obj.quoteAsset.localeCompare(allowedBridgeCurrency))
     for(let i = 0; i < numInstruments; i++){
         //cyclicalFunc(filteredSymbols[i].symbol)
-        cyclicalFuncForVirtual(filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset, allowedBridgeCurrency)
-        let reqId = filteredSymbols[i].symbol.concat(filteredSymbols[i+1].symbol)
+        //cyclicalFuncForVirtual(filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset, allowedBridgeCurrency)
         //const returnAsItIs = (price) => { return price }
-        //cyclicalFuncForBasket({
-        //                        reqId : reqId,
-        //                        symbols : [filteredSymbols[i].symbol, filteredSymbols[i+1].symbol],
-        //                        coefficients: [3,2],
-        //                        currency: "USDT",
-        //                        priceConverters: [returnAsItIs, returnAsItIs],
-        //                        exchange: "BINANCE"}
-        //)
+        cyclicalFuncForBasket({
+            assets                  : [filteredSymbols[i].symbol, filteredSymbols[i+1].symbol],
+            coefficients            : [3,2],
+            allowedBridgeCurrency   : "USDT",
+            targetAsset             : "BTC",
+            exchange                : "BINANCE"
+        })
     }
 }   

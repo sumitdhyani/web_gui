@@ -1,6 +1,6 @@
 const { SubscriptionHandler } = require('./IndependentCommonUtils/SubscriptionHandler')
 const { VirtualSubscriptionHandler } = require('./IndependentCommonUtils/VirtualSubscriptionHandler')
-const { BasketSubscriptionHandler } = require('./IndependentCommonUtils/BasketSubscriptionHandler')
+const baskerSubscriptionFunctions = require('./IndependentCommonUtils/BasketSubscriptionHandler')
 const { launch, raise_request, download_instruments} = require('./ClientLayerLibrary/ClientInterface')
                                     
 let subscriptionHandler = null
@@ -97,20 +97,76 @@ function unsubscribeVirtual(asset, currency, bridge, exchange, callback){
                                          callback)
 }
 
-function subscribeBasket(reqId, symbols, coefficients, currency, priceConverters, exchange, callback){ 
+function subscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exchange, callback){ 
     libLogger.debug(`subscribeBasket, arguments: ${JSON.stringify(arguments)}`)
-    basketSubscriptionHandler.subscribe(reqId,
-                                        symbols,
-                                        coefficients,
-                                        currency,
-                                        priceConverters,
-                                        exchange,
-                                        callback)
+    if (assets.length !== coefficients.length) {
+        throw new Error("No. of assets should be equal to the no. of coefficients")
+    }
+
+    const symbolNameGenerator = exchangeSymbolNameGenerators[exchange]
+    if (undefined === symbolNameGenerator) {
+        throw new Error("Invalid exchange")
+    }
+
+    const bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency)
+    let bridgeSymbolRecord = globalDict.get(bridgeSymbol)
+    if (undefined === bridgeSymbolRecord) {
+        throw new Error("There is no way to convert bridge currency intio the target asset")
+    }
+    
+    const symbols = []
+    assets.forEach(asset => {
+        const symbol = symbolNameGenerator(asset, bridgeCurrency, exchange)
+        const symbolRecord = globalDict.get(symbol)
+        if (symbolRecord === undefined) {
+            throw new Error(`No corresponding symbol exists for asset: ${asset}, currency: ${bridgeCurrency} in the exchange: ${exchange}`)
+        }
+
+        symbols.push(symbol.symbol)
+    })
+    
+    baskerSubscriptionFunctions.subscribeBasket(symbols,
+                                                coefficients,
+                                                exchange,
+                                                subscriptionHandler.subscribe.bind(subscriptionHandler),
+                                                bridgeSymbol,
+                                                callback)
 }
 
-function unsubscribeBasket(reqId){
-    libLogger.debug(`unsubscribeBasket, arguments: ${JSON.stringify(arguments)}`)
-    basketSubscriptionHandler.unsubscribe(reqId)
+function unsubscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exchange, callback){
+    libLogger.debug(`subscribeBasket, arguments: ${JSON.stringify(arguments)}`)
+    if (assets.length !== coefficients.length) {
+        throw new Error("No. of assets should be equal to the no. of coefficients")
+    }
+
+    const symbolNameGenerator = exchangeSymbolNameGenerators[exchange]
+    if (undefined === symbolNameGenerator) {
+        throw new Error("Invalid exchange")
+    }
+
+    const bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency)
+    let bridgeSymbolRecord = globalDict.get(bridgeSymbol)
+    if (undefined === bridgeSymbolRecord) {
+        throw new Error("There is no way to convert bridge currency intio the target asset")
+    }
+    
+    const symbols = []
+    assets.forEach(asset => {
+        const symbol = symbolNameGenerator(asset, bridgeCurrency, exchange)
+        const symbolRecord = globalDict.get(symbol)
+        if (symbolRecord === undefined) {
+            throw new Error(`No corresponding symbol exists for asset: ${asset}, currency: ${bridgeCurrency} in the exchange: ${exchange}`)
+        }
+
+        symbols.push(symbol.symbol)
+    })
+
+    baskerSubscriptionFunctions.unsubscribeBasket(symbols,
+                                                   coefficients,
+                                                   exchange,
+                                                   subscriptionHandler.unsubscribe.bind(subscriptionHandler),
+                                                   bridgeSymbol,
+                                                   callback)
 }
 
 function onPriceUpdate(update){
@@ -142,11 +198,6 @@ function init(auth_params, logger, staticDataCallback){
         virtualSubscriptionHandler = new VirtualSubscriptionHandler(subscriptionHandler.subscribe.bind(subscriptionHandler),
                                                                     subscriptionHandler.unsubscribe.bind(subscriptionHandler),
                                                                     libLogger)
-
-        basketSubscriptionHandler = new BasketSubscriptionHandler(
-            subscriptionHandler.subscribe.bind(subscriptionHandler),
-            subscriptionHandler.unsubscribe.bind(subscriptionHandler),
-            libLogger)
             
         launch(auth_params, onPriceUpdate, libLogger)
         staticDataCallback({allowed_instruments : dict,
