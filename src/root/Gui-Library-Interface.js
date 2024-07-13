@@ -109,7 +109,8 @@ function subscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exch
     }
 
     const bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency)
-    let bridgeSymbolRecord = globalDict.get(bridgeSymbol)
+    const bridgeSymbolKey =  JSON.stringify([bridgeSymbol, exchange])
+    const bridgeSymbolRecord = globalDict.get(bridgeSymbolKey)
     if (undefined === bridgeSymbolRecord) {
         throw new Error("There is no way to convert bridge currency intio the target asset")
     }
@@ -117,12 +118,13 @@ function subscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exch
     const symbols = []
     assets.forEach(asset => {
         const symbol = symbolNameGenerator(asset, bridgeCurrency, exchange)
-        const symbolRecord = globalDict.get(symbol)
+        const symbolKey = JSON.stringify([symbol, exchange])
+        const symbolRecord = globalDict.get(symbolKey)
         if (symbolRecord === undefined) {
             throw new Error(`No corresponding symbol exists for asset: ${asset}, currency: ${bridgeCurrency} in the exchange: ${exchange}`)
         }
 
-        symbols.push(symbol.symbol)
+        symbols.push(symbol)
     })
     
     baskerSubscriptionFunctions.subscribeBasket(symbols,
@@ -130,6 +132,7 @@ function subscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exch
                                                 exchange,
                                                 subscriptionHandler.subscribe.bind(subscriptionHandler),
                                                 bridgeSymbol,
+                                                {assets : assets, coefficients : coefficients, targetAsset: targetAsset},
                                                 callback)
 }
 
@@ -144,8 +147,9 @@ function unsubscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, ex
         throw new Error("Invalid exchange")
     }
 
-    const bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency)
-    let bridgeSymbolRecord = globalDict.get(bridgeSymbol)
+    const bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency, exchange)
+    const bridgeSymbolKey = JSON.stringify([bridgeSymbol, exchange])
+    const bridgeSymbolRecord = globalDict.get(bridgeSymbolKey)
     if (undefined === bridgeSymbolRecord) {
         throw new Error("There is no way to convert bridge currency intio the target asset")
     }
@@ -153,12 +157,13 @@ function unsubscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, ex
     const symbols = []
     assets.forEach(asset => {
         const symbol = symbolNameGenerator(asset, bridgeCurrency, exchange)
-        const symbolRecord = globalDict.get(symbol)
+        const symbolKey = JSON.stringify([symbol, exchange])
+        const symbolRecord = globalDict.get(symbolKey)
         if (symbolRecord === undefined) {
             throw new Error(`No corresponding symbol exists for asset: ${asset}, currency: ${bridgeCurrency} in the exchange: ${exchange}`)
         }
 
-        symbols.push(symbol.symbol)
+        symbols.push(symbol)
     })
 
     baskerSubscriptionFunctions.unsubscribeBasket(symbols,

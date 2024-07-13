@@ -46,22 +46,30 @@ function mainLoop(meta){
     }
 
     function actionForBasket(params) {//(assets, coefficients, bridgeCurrency, targetAsset, exchange, callback){ 
-        try{
+        try {
             if(0 === params.action.localeCompare("subscribe")){
-                subscribeBasket(params.assets,
-                                params.coefficients,
-                                params.allowedBridgeCurrency,
-                                params.targetAsset,
-                                params.exchange,
-                                onUpdate)
+                try {
+                    subscribeBasket(params.assets,
+                                    params.coefficients,
+                                    params.allowedBridgeCurrency,
+                                    params.targetAsset,
+                                    params.exchange,
+                                    onUpdate)
+                } catch(err) {
+                    console.log(err.message)
+                }
             }
             else{
-                unsubscribeBasket(params.assets,
-                                  params.coefficients,
-                                  params.allowedBridgeCurrency,
-                                  params.targetAsset,
-                                  params.exchange,
-                                  onUpdate)
+                try {
+                    unsubscribeBasket(params.assets,
+                                      params.coefficients,
+                                      params.allowedBridgeCurrency,
+                                      params.targetAsset,
+                                      params.exchange,
+                                      onUpdate)
+                } catch(err) {
+                    console.log(err.message)
+                }
             }
         }
         catch(err){
@@ -106,7 +114,7 @@ function mainLoop(meta){
         //cyclicalFuncForVirtual(filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset, allowedBridgeCurrency)
         //const returnAsItIs = (price) => { return price }
         cyclicalFuncForBasket({
-            assets                  : [filteredSymbols[i].symbol, filteredSymbols[i+1].symbol],
+            assets                  : [filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset],
             coefficients            : [3,2],
             allowedBridgeCurrency   : "USDT",
             targetAsset             : "BTC",

@@ -32,7 +32,7 @@ function subscribeList(symbols, exchange, subscriptionFunction, callback) {
         matter =
         {
             listUpdator : update=>{
-                            prices[symbolToIndex.get(update.symbol)] = update
+                            prices[symbolToIndex.get(update.symbol)] = update.price
                             if (checkIfAllUpdatesReceived()) {
                                 priceEvt.raise(prices)
                             }
@@ -81,7 +81,7 @@ function subscribeListwithCoefficients(symbols, coefficients, exchange, subscrip
             callback :  prices=>{
                             consolidatedPriceEvt.raise(prices.reduce((prev, price, index)=>{
                                 return prev + coefficients[index] * price                  
-                            }))
+                            }, 0))
                         },
             evt      :  consolidatedPriceEvt
         }
@@ -109,17 +109,17 @@ function unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubs
 
 
 const m3 = new Map()
-function subscribeBasket(symbols, coefficients, exchange, subscriptionFunction, conversionSymbol, callback){
+function subscribeBasket(symbols, coefficients, exchange, subscriptionFunction, conversionSymbol, staticInfo ,callback){
     const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionSymbol])
     let matter = m3.get(key)
     if (undefined === matter) {
         const priceConversionEvt = new Event()
         let conversionFactor = null
         matter = {
-            conversionCallback  :   price=> { conversionFactor = 1/price },
-            conversionApplier   :   price=>{
-                                        if (null != conversionFactor ) {
-                                            priceConversionEvt.raise(price*conversionFactor)
+            conversionCallback  :   update => { conversionFactor = 1/update.price },
+            conversionApplier   :   price =>{
+                                        if (null != conversionFactor) {
+                                            priceConversionEvt.raise({...staticInfo, price: price*conversionFactor})
                                         }
                                     },
             evt                 :   priceConversionEvt   
