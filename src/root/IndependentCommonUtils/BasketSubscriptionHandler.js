@@ -1,7 +1,7 @@
 const CommonUtils = require('./CommonUtils')
 const appSpecificErrors = require('./appSpecificErrors')
-const [SpuriousUnsubscription, DuplicateSubscription] = [appSpecificErrors.SpuriousUnsubscription, appSpecificErrors.DuplicateSubscription]
 const Event = CommonUtils.Event
+const {ErrorFunctionWrapper} = require('./ErrorFunctionWrapper')
 
 let m2 = new Map()
 function subscribeList(symbols, exchange, subscriptionFunction, callback) {
@@ -40,11 +40,10 @@ function subscribeList(symbols, exchange, subscriptionFunction, callback) {
             evt         : priceEvt
         }
 
-        m2.set(key, matter)
-
         symbols.forEach(symbol => {
             subscriptionFunction(symbol, exchange, "trade", matter.listUpdator)
         })
+        m2.set(key, matter)
     }
     
     matter.evt.registerCallback(callback)
@@ -86,8 +85,8 @@ function subscribeListwithCoefficients(symbols, coefficients, exchange, subscrip
             evt      :  consolidatedPriceEvt
         }
 
-        m1.set(key, matter)
         subscribeList(symbols, exchange, subscriptionFunction, matter.callback)
+        m1.set(key, matter)
     }
     
     matter.evt.registerCallback(callback)
@@ -125,12 +124,16 @@ function subscribeBasket(symbols, coefficients, exchange, subscriptionFunction, 
             evt                 :   priceConversionEvt   
         }
 
-        m3.set(key, matter)
         subscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
         subscribeListwithCoefficients(symbols, coefficients, exchange, subscriptionFunction, matter.conversionApplier)
+        m3.set(key, matter)
     }
 
-    matter.evt.registerCallback(callback)
+    try {
+        matter.evt.registerCallback(callback)
+    } catch(err) {
+        throw new Error(`This callback is already registered for the key: ${key}`)
+    }
 }
 
 function unsubscribeBasket(symbols, coefficients, exchange, unsubscriptionFunction, conversionSymbol, callback){
@@ -140,7 +143,12 @@ function unsubscribeBasket(symbols, coefficients, exchange, unsubscriptionFuncti
         throw new Error(`Spurious unsubscription for key: ${key}`)
     } 
 
-    matter.evt.unregisterCallback(callback)
+    try {
+        matter.evt.unregisterCallback(callback)
+    } catch(err) {
+        throw new Error(`This callback is not registered for the key: ${key}`)
+    }
+
     if (matter.evt.empty()) {
         unsubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
         unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubscriptionFunction, matter.conversionApplier)
