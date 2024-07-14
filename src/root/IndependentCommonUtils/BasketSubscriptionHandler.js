@@ -13,27 +13,20 @@ function subscribeList(symbols, exchange, subscriptionFunction, callback) {
             symbolToIndex.set(symbol, index)
         })
 
-        let allUpdatesReceived = false;
-        function checkIfAllUpdatesReceived() {
-            if(allUpdatesReceived) {
-                return true
-            }
-
-            allUpdatesReceived =
-            prices.reduce((prev, price)=>{
-                return prev && (price != null)
-            }, true)
-
-            return allUpdatesReceived
-        }
-
         const prices = new Array(symbols.length).fill(null)
         const priceEvt = new Event()
+        let allUpdatesReceived = false;
         matter =
         {
             listUpdator : update=>{
                             prices[symbolToIndex.get(update.symbol)] = update.price
-                            if (checkIfAllUpdatesReceived()) {
+                            allUpdatesReceived =
+                            allUpdatesReceived? true:
+                                prices.reduce((prev, price)=> {
+                                    return prev && (price !== null)
+                                },true)
+                            
+                            if(allUpdatesReceived) {
                                 priceEvt.raise(prices)
                             }
                           },
