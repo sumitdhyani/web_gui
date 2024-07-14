@@ -1,10 +1,8 @@
 const CommonUtils = require('./CommonUtils')
-const appSpecificErrors = require('./appSpecificErrors')
 const Event = CommonUtils.Event
-const {ErrorFunctionWrapper} = require('./ErrorFunctionWrapper')
 
 let m2 = new Map()
-function subscribeList(symbols, exchange, subscriptionFunction, callback) {
+function subscribeList(symbols, exchange, vanillaSubscriptionFunction, callback) {
     const key = JSON.stringify(...symbols, exchange)
     let matter = m2.get(key)
     if (undefined === matter) {
@@ -34,7 +32,7 @@ function subscribeList(symbols, exchange, subscriptionFunction, callback) {
         }
 
         symbols.forEach(symbol => {
-            subscriptionFunction(symbol, exchange, "trade", matter.listUpdator)
+            vanillaSubscriptionFunction(symbol, exchange, "trade", matter.listUpdator)
         })
         m2.set(key, matter)
     }
@@ -43,7 +41,7 @@ function subscribeList(symbols, exchange, subscriptionFunction, callback) {
 }
 
 
-function unsubscribeList(symbols, exchange, unsubscriptionFunction, callback) {
+function unsubscribeList(symbols, exchange, vanillaUnsubscriptionFunction, callback) {
     const key = JSON.stringify(...symbols, exchange)
     const matter = m2.get(key)
     if (undefined === matter) {
@@ -53,7 +51,7 @@ function unsubscribeList(symbols, exchange, unsubscriptionFunction, callback) {
     matter.evt.unregisterCallback(callback)
     if (matter.evt.empty()) {
         symbols.forEach(symbol=>{
-            unsubscriptionFunction(symbol, exchange, "trade", matter.listUpdator)
+            vanillaUnsubscriptionFunction(symbol, exchange, "trade", matter.listUpdator)
         })
         m2.delete(key)
     }
@@ -63,7 +61,7 @@ function unsubscribeList(symbols, exchange, unsubscriptionFunction, callback) {
 
 
 const m1 = new Map()
-function subscribeListwithCoefficients(symbols, coefficients, exchange, subscriptionFunction, callback){
+function subscribeListwithCoefficients(symbols, coefficients, exchange, vanillaSubscriptionFunction, callback){
     const key = JSON.stringify([...symbols, ...coefficients, exchange])
     let matter = m1.get(key)
     if (undefined === matter) {
@@ -78,14 +76,14 @@ function subscribeListwithCoefficients(symbols, coefficients, exchange, subscrip
             evt      :  consolidatedPriceEvt
         }
 
-        subscribeList(symbols, exchange, subscriptionFunction, matter.callback)
+        subscribeList(symbols, exchange, vanillaSubscriptionFunction, matter.callback)
         m1.set(key, matter)
     }
     
     matter.evt.registerCallback(callback)
 }
 
-function unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubscriptionFunction, callback){
+function unsubscribeListwithCoefficients(symbols, coefficients, exchange, vanillaUnsubscriptionFunction, callback){
     const key = JSON.stringify([...symbols, ...coefficients, exchange])
     const matter = m1.get(key)
     if (undefined === matter) {
@@ -94,14 +92,14 @@ function unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubs
 
     matter.evt.unregisterCallback(callback)
     if (matter.evt.empty()) {
-        unsubscribeList(symbols, exchange, unsubscriptionFunction, matter.callback)
+        unsubscribeList(symbols, exchange, vanillaUnsubscriptionFunction, matter.callback)
         m1.delete(key)
     }
 }
 
 
 const m3 = new Map()
-function subscribeBasket(symbols, coefficients, exchange, subscriptionFunction, conversionSymbol, staticInfo ,callback){
+function subscribeBasket(symbols, coefficients, exchange, vanillaSubscriptionFunction, conversionSymbol, staticInfo ,callback){
     const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionSymbol])
     let matter = m3.get(key)
     if (undefined === matter) {
@@ -117,8 +115,8 @@ function subscribeBasket(symbols, coefficients, exchange, subscriptionFunction, 
             evt                 :   priceConversionEvt   
         }
 
-        subscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
-        subscribeListwithCoefficients(symbols, coefficients, exchange, subscriptionFunction, matter.conversionApplier)
+        vanillaSubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        subscribeListwithCoefficients(symbols, coefficients, exchange, vanillaSubscriptionFunction, matter.conversionApplier)
         m3.set(key, matter)
     }
 
@@ -129,7 +127,7 @@ function subscribeBasket(symbols, coefficients, exchange, subscriptionFunction, 
     }
 }
 
-function unsubscribeBasket(symbols, coefficients, exchange, unsubscriptionFunction, conversionSymbol, callback){
+function unsubscribeBasket(symbols, coefficients, exchange, vanillaUnsubscriptionFunction, conversionSymbol, callback){
     const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionSymbol])
     const matter = m3.get(key)
     if (undefined === matter) {
@@ -143,8 +141,8 @@ function unsubscribeBasket(symbols, coefficients, exchange, unsubscriptionFuncti
     }
 
     if (matter.evt.empty()) {
-        unsubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
-        unsubscribeListwithCoefficients(symbols, coefficients, exchange, unsubscriptionFunction, matter.conversionApplier)
+        vanillaUnsubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        unsubscribeListwithCoefficients(symbols, coefficients, exchange, vanillaUnsubscriptionFunction, matter.conversionApplier)
         m3.delete(key)
     }
 }
