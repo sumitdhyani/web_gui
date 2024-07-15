@@ -123,14 +123,14 @@ function mainLoop(meta){
     const filteredSymbols = [...symbolDict.values()].filter( obj=> 0 === obj.quoteAsset.localeCompare(allowedBridgeCurrency))
     for(let i = 0; i < numInstruments; i++){
         //cyclicalFunc(filteredSymbols[i].symbol)
-        //cyclicalFuncForVirtual(filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset, allowedBridgeCurrency)
+        cyclicalFuncForVirtual(filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset, allowedBridgeCurrency)
         //const returnAsItIs = (price) => { return price }
-        cyclicalFuncForBasket({
-            assets                  : [filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset],
-            coefficients            : [3,2],
-            allowedBridgeCurrency   : "USDT",
-            targetAsset             : "BTC",
-            exchange                : "BINANCE"
-        })
+        //cyclicalFuncForBasket({
+        //    assets                  : [filteredSymbols[i].baseAsset, filteredSymbols[i+1].baseAsset],
+        //    coefficients            : [3,2],
+        //    allowedBridgeCurrency   : "USDT",
+        //    targetAsset             : "BTC",
+        //    exchange                : "BINANCE"
+        //})
     }
 }   

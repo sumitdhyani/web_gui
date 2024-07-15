@@ -1,10 +1,9 @@
 const { SubscriptionHandler } = require('./IndependentCommonUtils/SubscriptionHandler')
-const { VirtualSubscriptionHandler } = require('./IndependentCommonUtils/VirtualSubscriptionHandler')
+const virtualSubsccriptionFunctions = require('./IndependentCommonUtils/VirtualSubscriptionHandler')
 const baskerSubscriptionFunctions = require('./IndependentCommonUtils/BasketSubscriptionHandler')
 const { launch, raise_request, download_instruments} = require('./ClientLayerLibrary/ClientInterface')
                                     
 let subscriptionHandler = null
-let virtualSubscriptionHandler = null
 let globalDict = null
 
 let libLogger = null
@@ -57,16 +56,12 @@ function subscribeVirtual(asset, currency, bridge, exchange, callback){
         throw new Error("Invalid currency side for this bridge")
     }
 
-    if(undefined !== exchangeSymbolNameGenerator){
-        virtualSubscriptionHandler.subscribe(asset,
-                                             currency,
-                                             bridge,
-                                             exchange,
-                                             callback,
-                                             exchangeSymbolNameGenerator)
-    }else{
-        libLogger.error(`Symbol name generation method for this exchange in not defined`)
-    }
+    virtualSubsccriptionFunctions.subscribeVirtual(assetSymbol,
+                     currencySymbol,
+                     subscriptionHandler.subscribe.bind(subscriptionHandler),
+                     exchange,
+                     {asset: asset, currency : currency, bridge : bridge, exchange : exchange},
+                     callback)
 }
 
 function unsubscribeVirtual(asset, currency, bridge, exchange, callback){
@@ -89,9 +84,9 @@ function unsubscribeVirtual(asset, currency, bridge, exchange, callback){
         throw new Error("Invalid currency side for this bridge")
     }
 
-    virtualSubscriptionHandler.unsubscribe(asset,
-                                         currency,
-                                         bridge,
+    virtualSubsccriptionFunctions.unsubscribeVirtual(assetSymbol,
+                                         currencySymbol,
+                                         subscriptionHandler.unsubscribe.bind(subscriptionHandler),
                                          exchange,
                                          callback)
 }
@@ -199,10 +194,6 @@ function init(auth_params, logger, staticDataCallback){
                                                         },
                                                         libLogger)
 
-        virtualSubscriptionHandler = new VirtualSubscriptionHandler(subscriptionHandler.subscribe.bind(subscriptionHandler),
-                                                                    subscriptionHandler.unsubscribe.bind(subscriptionHandler),
-                                                                    libLogger)
-            
         launch(auth_params, onPriceUpdate, libLogger)
         staticDataCallback({allowed_instruments : dict,
                             allowed_exchanges: ["BINANCE", "FAKEX"]})
