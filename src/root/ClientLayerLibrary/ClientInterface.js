@@ -6,7 +6,7 @@ const constants = require('../ClientLayerLibrary/Constants').constants
 //const fs = require('fs')
 let fsm = null
 
-function start(auth_params, data_callback, logger){
+function start(auth_params, logger){
     fsm = new ClientLayerFSM({auth_params : auth_params,
                               authentication_method : (auth_params)=>{ 
                                                                         let currServerIndex = 0
@@ -68,8 +68,6 @@ function start(auth_params, data_callback, logger){
                                 Validator.validateRequest(intent)
                                 NetworkServices.forward(intent)
                               },
-                              subscription_dictionary : new Set(),
-                              data_callback: data_callback,
                               logger : logger})
     NetworkServices.setDisconnectionHandler(reason=>{
       fsm.handleEvent("disconnect", reason)

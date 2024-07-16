@@ -1,6 +1,7 @@
 class ActionAntiAction{
-    constructor(){
+    constructor(logger){
         this.keysAndTimers = new Map()
+        this.logger = logger
     }
 
     act(key, timeout, func) {
@@ -9,7 +10,7 @@ class ActionAntiAction{
             this.keysAndTimers.set(key, setTimeout(()=> { 
                 func()
                 this.keysAndTimers.delete(key)
-                console.log(`Action executed on key: ${key}`)
+                this.logger.debug(`Action executed on key: ${key}`)
         }, timeout))
         } else {
             //console.log(`Duplicate action on key: ${key}`)

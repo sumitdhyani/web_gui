@@ -5,6 +5,7 @@
         }
 
         requestToSend(sock, event, ack, ...data) {
+            console.log(`reqToSend, arguments: ${JSON.stringify([...data])}`)
             if (!this.waitingAck){
                 this.send(sock, event, ack, ...data)
             } else{

@@ -1,13 +1,12 @@
-const { SubscriptionHandler } = require('./IndependentCommonUtils/SubscriptionHandler')
 const virtualSubsccriptionFunctions = require('./IndependentCommonUtils/VirtualSubscriptionHandler')
 const baskerSubscriptionFunctions = require('./IndependentCommonUtils/BasketSubscriptionHandler')
 const { launch, raise_request, download_instruments} = require('./ClientLayerLibrary/ClientInterface')
                                     
-let subscriptionHandler = null
 let globalDict = null
 
 let libLogger = null
 function subscribe(symbol , exchange, type, callback){
+    libLogger.debug(`subscribe, arguments: ${JSON.stringify(arguments)}`)
     const key = JSON.stringify([symbol, exchange])
     const symbolRecord = globalDict.get(key)
     if (undefined === symbolRecord) {
@@ -15,11 +14,17 @@ function subscribe(symbol , exchange, type, callback){
     } else if( 0 !== exchange.localeCompare(symbolRecord.exchange)) {
         throw new Error("Invalid Symbol, for this exchange")
     }
-    libLogger.debug(`subscribe, arguments: ${JSON.stringify(arguments)}`)
-    subscriptionHandler.subscribe(symbol , exchange, type, callback)
+
+    raise_request({
+        action      : "subscribe",
+        symbol      : symbol,
+        exchange    : exchange,
+        type        : type,
+        callback    : callback})
 }
 
 function unsubscribe(symbol , exchange, type, callback){
+    libLogger.debug(`unsubscribe, arguments: ${JSON.stringify(arguments)}`)
     const key = JSON.stringify([symbol, exchange])
     const symbolRecord = globalDict.get(key)
     if (undefined === symbolRecord) {
@@ -27,8 +32,13 @@ function unsubscribe(symbol , exchange, type, callback){
     } else if( 0 !== exchange.localeCompare(symbolRecord.exchange)) {
         throw new Error("Invalid Symbol, for this exchange")
     }
-    libLogger.debug(`unsubscribe, arguments: ${JSON.stringify(arguments)}`)
-    subscriptionHandler.unsubscribe(symbol , exchange, type, callback)
+
+    raise_request({
+        action      : "unsubscribe",
+        symbol      : symbol,
+        exchange    : exchange,
+        type        : type,
+        callback    : callback})
 }
 
 let exchangeSymbolNameGenerators = {BINANCE : (asset, currency, exchange)=> asset.concat(currency),
@@ -58,7 +68,7 @@ function subscribeVirtual(asset, currency, bridge, exchange, callback){
 
     virtualSubsccriptionFunctions.subscribeVirtual(assetSymbol,
                      currencySymbol,
-                     subscriptionHandler.subscribe.bind(subscriptionHandler),
+                     subscribe,
                      exchange,
                      {asset: asset, currency : currency, bridge : bridge, exchange : exchange},
                      callback)
@@ -84,9 +94,9 @@ function unsubscribeVirtual(asset, currency, bridge, exchange, callback){
         throw new Error("Invalid currency side for this bridge")
     }
 
-    virtualSubsccriptionFunctions.unsubscribeVirtual(assetSymbol,
+    virtualSubsccriptionFunctions.unscribeVirtual(assetSymbol,
                                          currencySymbol,
-                                         subscriptionHandler.unsubscribe.bind(subscriptionHandler),
+                                         unsubscribe,
                                          exchange,
                                          callback)
 }
@@ -124,7 +134,7 @@ function subscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exch
     baskerSubscriptionFunctions.subscribeBasket(symbols,
                                                 coefficients,
                                                 exchange,
-                                                subscriptionHandler.subscribe.bind(subscriptionHandler),
+                                                subscribe,
                                                 bridgeSymbol,
                                                 {assets : assets, coefficients : coefficients, targetAsset: targetAsset},
                                                 callback)
@@ -163,13 +173,9 @@ function unsubscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, ex
     baskerSubscriptionFunctions.unsubscribeBasket(symbols,
                                                    coefficients,
                                                    exchange,
-                                                   subscriptionHandler.unsubscribe.bind(subscriptionHandler),
+                                                   unsubscribe,
                                                    bridgeSymbol,
                                                    callback)
-}
-
-function onPriceUpdate(update){
-    subscriptionHandler.onUpdate(update)
 }
 
 function init(auth_params, logger, staticDataCallback){
@@ -178,23 +184,8 @@ function init(auth_params, logger, staticDataCallback){
         globalDict = dict
         libLogger = logger
         libLogger.debug(JSON.stringify(dict))
-        subscriptionHandler = new SubscriptionHandler( (symbol, exchange, type)=>{
-                                                        raise_request({
-                                                                action : "subscribe",
-                                                                symbol : symbol,
-                                                                exchange : exchange,
-                                                                type: type})
-                                                        },
-                                                        (symbol, exchange, type)=>{
-                                                            raise_request({
-                                                                action : "unsubscribe",
-                                                                symbol : symbol,
-                                                                exchange : exchange,
-                                                                type: type})
-                                                        },
-                                                        libLogger)
-
-        launch(auth_params, onPriceUpdate, libLogger)
+        
+        launch(auth_params, libLogger)
         staticDataCallback({allowed_instruments : dict,
                             allowed_exchanges: ["BINANCE", "FAKEX"]})
     })
