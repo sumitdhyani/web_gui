@@ -112,11 +112,14 @@ function subscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, exch
         throw new Error("Invalid exchange")
     }
 
-    const bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency)
-    const bridgeSymbolKey =  JSON.stringify([bridgeSymbol, exchange])
-    const bridgeSymbolRecord = globalDict.get(bridgeSymbolKey)
-    if (undefined === bridgeSymbolRecord) {
-        throw new Error("There is no way to convert bridge currency intio the target asset")
+    let bridgeSymbol = null
+    if (0 !== bridgeCurrency.localeCompare(targetAsset)) {
+        bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency)
+        const bridgeSymbolKey =  JSON.stringify([bridgeSymbol, exchange])
+        const bridgeSymbolRecord = globalDict.get(bridgeSymbolKey)
+        if (undefined === bridgeSymbolRecord) {
+            throw new Error("There is no way to convert bridge currency intio the target asset")
+        }
     }
     
     const symbols = []
@@ -151,11 +154,14 @@ function unsubscribeBasket(assets, coefficients, bridgeCurrency, targetAsset, ex
         throw new Error("Invalid exchange")
     }
 
-    const bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency, exchange)
-    const bridgeSymbolKey = JSON.stringify([bridgeSymbol, exchange])
-    const bridgeSymbolRecord = globalDict.get(bridgeSymbolKey)
-    if (undefined === bridgeSymbolRecord) {
-        throw new Error("There is no way to convert bridge currency intio the target asset")
+    let bridgeSymbol = null
+    if (0 !== bridgeCurrency.localeCompare(targetAsset)) {
+        bridgeSymbol = symbolNameGenerator(targetAsset, bridgeCurrency, exchange)
+        const bridgeSymbolKey = JSON.stringify([bridgeSymbol, exchange])
+        const bridgeSymbolRecord = globalDict.get(bridgeSymbolKey)
+        if (undefined === bridgeSymbolRecord) {
+            throw new Error("There is no way to convert bridge currency intio the target asset")
+        }
     }
     
     const symbols = []

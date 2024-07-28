@@ -42,11 +42,12 @@ function unsubscribeListwithCoefficients(symbols, coefficients, exchange, vanill
 
 const m3 = new Map()
 function subscribeBasket(symbols, coefficients, exchange, vanillaSubscriptionFunction, conversionSymbol, staticInfo ,callback){
-    const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionSymbol])
+    const conversionNeeded = (conversionSymbol !== null)
+    const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionNeeded? conversionSymbol: ""])
     let matter = m3.get(key)
     if (undefined === matter) {
         const priceConversionEvt = new Event()
-        let conversionFactor = null
+        let conversionFactor = conversionNeeded? null : 1
         matter = {
             conversionCallback  :   update => { conversionFactor = 1/update.price },
             conversionApplier   :   price =>{
@@ -57,7 +58,9 @@ function subscribeBasket(symbols, coefficients, exchange, vanillaSubscriptionFun
             evt                 :   priceConversionEvt   
         }
 
-        vanillaSubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        if (conversionNeeded) {
+            vanillaSubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        }
         subscribeListwithCoefficients(symbols, coefficients, exchange, vanillaSubscriptionFunction, matter.conversionApplier)
         m3.set(key, matter)
     }
@@ -70,7 +73,8 @@ function subscribeBasket(symbols, coefficients, exchange, vanillaSubscriptionFun
 }
 
 function unsubscribeBasket(symbols, coefficients, exchange, vanillaUnsubscriptionFunction, conversionSymbol, callback){
-    const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionSymbol])
+    const conversionWasNeeded = (conversionSymbol !== null)
+    const key = JSON.stringify([...symbols, ...coefficients, exchange, conversionWasNeeded? conversionSymbol: ""])
     const matter = m3.get(key)
     if (undefined === matter) {
         throw new Error(`Spurious unsubscription for key: ${key}`)
@@ -83,7 +87,9 @@ function unsubscribeBasket(symbols, coefficients, exchange, vanillaUnsubscriptio
     }
 
     if (matter.evt.empty()) {
-        vanillaUnsubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        if (conversionWasNeeded) {
+            vanillaUnsubscriptionFunction(conversionSymbol, exchange, "trade", matter.conversionCallback)
+        }
         unsubscribeListwithCoefficients(symbols, coefficients, exchange, vanillaUnsubscriptionFunction, matter.conversionApplier)
         m3.delete(key)
     }
